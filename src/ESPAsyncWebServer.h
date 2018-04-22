@@ -38,6 +38,10 @@
 #error Platform not supported
 #endif
 
+#if !defined(UNUSED)
+#define UNUSED(x) (void)(x)
+#endif
+
 #define DEBUGF(...) //Serial.printf(__VA_ARGS__)
 
 class AsyncWebServer;

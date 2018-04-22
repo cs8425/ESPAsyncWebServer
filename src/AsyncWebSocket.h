@@ -27,7 +27,7 @@
 #else
 #include <ESPAsyncTCP.h>
 #endif
-#include <ESPAsyncWebServer.h>
+#include "ESPAsyncWebServer.h"
 
 class AsyncWebSocket;
 class AsyncWebSocketResponse;
@@ -77,8 +77,8 @@ class AsyncWebSocketMessageBuffer {
     AsyncWebSocketMessageBuffer(const AsyncWebSocketMessageBuffer &); 
     AsyncWebSocketMessageBuffer(AsyncWebSocketMessageBuffer &&); 
     ~AsyncWebSocketMessageBuffer(); 
-    void operator ++(int i) { _count++; }
-    void operator --(int i) {  if (_count > 0) { _count--; } ;  }
+    void operator ++(int i) { UNUSED(i); _count++; }
+    void operator --(int i) { UNUSED(i); if (_count > 0) { _count--; } ;  }
     bool reserve(size_t size);
     void lock() { _lock = true; }
     void unlock() { _lock = false; }
