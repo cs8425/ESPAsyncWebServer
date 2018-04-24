@@ -717,6 +717,7 @@ void AsyncWebServerRequest::send(AsyncWebServerResponse *response){
     send(500);
   }
   else {
+    if(!_response->_isChunked()) _client->setNoDelay(true);
     _client->setRxTimeout(0);
     _response->_respond(this);
   }
@@ -742,11 +743,11 @@ AsyncWebServerResponse * AsyncWebServerRequest::beginResponse(Stream &stream, co
   return new AsyncStreamResponse(stream, contentType, len, callback);
 }
 
-AsyncWebServerResponse * AsyncWebServerRequest::beginResponse(const String& contentType, size_t len, AwsResponseFiller callback, AwsTemplateProcessor templateCallback){
+AsyncWebServerResponse * AsyncWebServerRequest::beginResponse(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback){
   return new AsyncCallbackResponse(contentType, len, callback, templateCallback);
 }
 
-AsyncWebServerResponse * AsyncWebServerRequest::beginChunkedResponse(const String& contentType, AwsResponseFiller callback, AwsTemplateProcessor templateCallback){
+AsyncWebServerResponse * AsyncWebServerRequest::beginChunkedResponse(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback){
   if(_version)
     return new AsyncChunkedResponse(contentType, callback, templateCallback);
   return new AsyncCallbackResponse(contentType, 0, callback, templateCallback);
@@ -754,6 +755,10 @@ AsyncWebServerResponse * AsyncWebServerRequest::beginChunkedResponse(const Strin
 
 AsyncResponseStream * AsyncWebServerRequest::beginResponseStream(const String& contentType, size_t bufferSize){
   return new AsyncResponseStream(contentType, bufferSize);
+}
+
+AsyncResponseStreamChunked * AsyncWebServerRequest::beginResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize){
+  return new AsyncResponseStreamChunked(contentType, callback, bufferSize);
 }
 
 AsyncWebServerResponse * AsyncWebServerRequest::beginResponse_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback){
@@ -784,11 +789,11 @@ void AsyncWebServerRequest::send(Stream &stream, const String& contentType, size
   send(beginResponse(stream, contentType, len, callback));
 }
 
-void AsyncWebServerRequest::send(const String& contentType, size_t len, AwsResponseFiller callback, AwsTemplateProcessor templateCallback){
+void AsyncWebServerRequest::send(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback){
   send(beginResponse(contentType, len, callback, templateCallback));
 }
 
-void AsyncWebServerRequest::sendChunked(const String& contentType, AwsResponseFiller callback, AwsTemplateProcessor templateCallback){
+void AsyncWebServerRequest::sendChunked(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback){
   send(beginChunkedResponse(contentType, callback, templateCallback));
 }
 

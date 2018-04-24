@@ -51,12 +51,14 @@ class AsyncAbstractResponse: public AsyncWebServerResponse {
     size_t _fillBufferAndProcessTemplates(uint8_t* buf, size_t maxLen);
   protected:
     AwsTemplateProcessor _callback;
+//    bool _end;
   public:
     AsyncAbstractResponse(AwsTemplateProcessor callback=nullptr);
     void _respond(AsyncWebServerRequest *request);
     size_t _ack(AsyncWebServerRequest *request, size_t len, uint32_t time);
     bool _sourceValid() const { return false; }
     virtual size_t _fillBuffer(uint8_t *buf __attribute__((unused)), size_t maxLen __attribute__((unused))) { return 0; }
+//    void end() { _end = true; }
 };
 
 #define TEMPLATE_PLACEHOLDER '%'
@@ -87,20 +89,20 @@ class AsyncStreamResponse: public AsyncAbstractResponse {
 
 class AsyncCallbackResponse: public AsyncAbstractResponse {
   private:
-    AwsResponseFiller _content;
+    AwsResponseCallBack _content;
     size_t _filledLength;
   public:
-    AsyncCallbackResponse(const String& contentType, size_t len, AwsResponseFiller callback, AwsTemplateProcessor templateCallback=nullptr);
+    AsyncCallbackResponse(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
     bool _sourceValid() const { return !!(_content); }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
 };
 
 class AsyncChunkedResponse: public AsyncAbstractResponse {
   private:
-    AwsResponseFiller _content;
+    AwsResponseCallBack _content;
     size_t _filledLength;
   public:
-    AsyncChunkedResponse(const String& contentType, AwsResponseFiller callback, AwsTemplateProcessor templateCallback=nullptr);
+    AsyncChunkedResponse(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
     bool _sourceValid() const { return !!(_content); }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
 };
@@ -124,6 +126,22 @@ class AsyncResponseStream: public AsyncAbstractResponse, public Print {
     AsyncResponseStream(const String& contentType, size_t bufferSize);
     ~AsyncResponseStream();
     bool _sourceValid() const { return (_state < RESPONSE_END); }
+    virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
+    size_t write(const uint8_t *data, size_t len);
+    size_t write(uint8_t data);
+    using Print::write;
+};
+
+class AsyncResponseStreamChunked: public AsyncAbstractResponse, public Print {
+  private:
+    AwsResponseStreamChunkedCallBack _content;
+    cbuf *_buf;
+    size_t _filledLength;
+  public:
+    //AsyncResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize);
+    AsyncResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, AwsTemplateProcessor processorCallback=nullptr);
+    ~AsyncResponseStreamChunked();
+    bool _sourceValid() const { return !!(_content); }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
     size_t write(const uint8_t *data, size_t len);
     size_t write(uint8_t data);
