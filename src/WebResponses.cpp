@@ -683,7 +683,7 @@ size_t AsyncResponseStream::write(uint8_t data){
 
 
 /*
- * Response Stream Chunked (You can print/write/printf to it, up to the contentLen bytes)
+ * Response Stream Chunked (You can print/write/printf to it, untill you call `res->end()`)
  * */
 
 AsyncResponseStreamChunked::AsyncResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, AwsTemplateProcessor processorCallback): AsyncAbstractResponse(processorCallback) {
@@ -714,6 +714,9 @@ size_t AsyncResponseStreamChunked::_fillBuffer(uint8_t *buf, size_t maxLen){
 }
 
 size_t AsyncResponseStreamChunked::write(const uint8_t *data, size_t len){
+  if(_end){
+    return 0;
+  }
   if(len > _buf->room()){
     size_t needed = len - _buf->room();
     _buf->resizeAdd(needed);
