@@ -263,7 +263,6 @@ void AsyncAbstractResponse::_respond(AsyncWebServerRequest *request){
 }
 
 size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, uint32_t time){
-os_printf("a:%u:%u:%u\n", _state, len, time);
   UNUSED(time);
   if(!_sourceValid()){
     _state = RESPONSE_FAILED;
@@ -317,7 +316,6 @@ os_printf("a:%u:%u:%u\n", _state, len, time);
       // HTTP 1.1 allows leading zeros in chunk length. Or spaces may be added.
       // See RFC2616 sections 2, 3.6.1.
       readLen = _fillBufferAndProcessTemplates(buf+headLen+6, outLen - 8);
-      //readLen = _fillBuffer(buf+headLen+6, outLen - 8);
       outLen = sprintf((char*)buf+headLen, "%x", readLen) + headLen;
       while(outLen < headLen + 4) buf[outLen++] = ' ';
       buf[outLen++] = '\r';
@@ -327,7 +325,6 @@ os_printf("a:%u:%u:%u\n", _state, len, time);
       buf[outLen++] = '\n';
     } else {
       outLen = _fillBufferAndProcessTemplates(buf+headLen, outLen) + headLen;
-      //outLen = _fillBuffer(buf+headLen, outLen) + headLen;
     }
 
     if(outLen)
@@ -343,11 +340,9 @@ os_printf("a:%u:%u:%u\n", _state, len, time);
     if((_chunked && readLen == 0 && _end) || (!_chunked && !_sendContentLength && outLen == 0) || (!_chunked && _sentLength == _contentLength)){
       _state = RESPONSE_WAIT_ACK;
     }
-os_printf("a2:%u:%u/%u:%u:%u\n", _state, _end, readLen, outLen, _sentLength);
     return outLen;
 
   } else if(_state == RESPONSE_WAIT_ACK){
-os_printf("a3:%u:%u/%u:%u\n", _state, _end, _ackedLength, _writtenLength);
     if(!_sendContentLength || _ackedLength >= _writtenLength){
       _state = RESPONSE_END;
       if(!_chunked && !_sendContentLength && _end)

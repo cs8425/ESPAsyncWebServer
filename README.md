@@ -54,6 +54,7 @@ To use this library you might need to have the latest git versions of [ESP32](ht
 		- [Respond with content using a callback containing templates and extra headers](#respond-with-content-using-a-callback-containing-templates-and-extra-headers)
 		- [Chunked Response](#chunked-response)
 		- [Print to response](#print-to-response)
+		- [Print to chunked response](#print-to-chunked-response)
 		- [ArduinoJson Basic Response](#arduinojson-basic-response)
 		- [ArduinoJson Advanced Response](#arduinojson-advanced-response)
 	- [Serving static files](#serving-static-files)
@@ -708,6 +709,23 @@ response->print("</ul>");
 response->print("</body></html>");
 //send the response last
 request->send(response);
+```
+
+### Print to chunked response
+Used when content length is unknown. output until call `res->end()`
+```cpp
+AsyncResponseStreamChunked *res = request->beginResponseStreamChunked("text/plain", [](AsyncResponseStreamChunked* res) -> size_t {
+  static int i = 0;
+  if(i < 20){
+    ret = res->printf("i = %u, heap = \n", i, ESP.getFreeHeap());
+    i++;
+  } else {
+    i = 0;
+    res->end();
+  }
+});
+res->addHeader("Server","ESP Async Web Server");
+request->send(res);
 ```
 
 ### ArduinoJson Basic Response

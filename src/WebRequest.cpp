@@ -717,7 +717,7 @@ void AsyncWebServerRequest::send(AsyncWebServerResponse *response){
     send(500);
   }
   else {
-    if(!_response->_isChunked()) _client->setNoDelay(true);
+    //if(!_response->_isChunked()) _client->setNoDelay(true);
     _client->setRxTimeout(0);
     _response->_respond(this);
   }
