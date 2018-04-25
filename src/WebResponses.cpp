@@ -705,7 +705,7 @@ AsyncResponseStreamChunked::~AsyncResponseStreamChunked(){
 
 size_t AsyncResponseStreamChunked::_fillBuffer(uint8_t *buf, size_t maxLen){
   if(!_end){
-    _content(this);
+    _content(this, _buf->room());
   }
 
   int ret = _buf->read((char*)buf, maxLen);

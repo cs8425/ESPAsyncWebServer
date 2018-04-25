@@ -124,7 +124,7 @@ typedef enum { RCT_NOT_USED = -1, RCT_DEFAULT = 0, RCT_HTTP, RCT_WS, RCT_EVENT, 
 typedef std::function<size_t(uint8_t*, size_t, size_t)> AwsResponseFiller;
 typedef std::function<String(const String&)> AwsTemplateProcessor;
 
-typedef std::function<size_t(AsyncResponseStreamChunked*)> AwsResponseStreamChunkedCallBack;
+typedef std::function<void(AsyncResponseStreamChunked*, size_t)> AwsResponseStreamChunkedCallBack;
 
 typedef std::function<size_t(AsyncWebServerResponse*, uint8_t*, size_t, size_t)> AwsResponseCallBack;
 
