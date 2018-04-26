@@ -644,17 +644,52 @@ request->send(response);
 ### Print to chunked response
 Used when content length is unknown. Output data until calling `res->end()`.
 ```cpp
-AsyncResponseStreamChunked *res = request->beginResponseStreamChunked("text/plain", [](AsyncResponseStreamChunked* res) -> size_t {
-  static int i = 0;
-  if(i < 20){
-    ret = res->printf("i = %u, heap = %u\n", i, ESP.getFreeHeap());
-    i++;
-  } else {
-    i = 0;
-    res->end();
-  }
+uint16_t* vars = new uint16_t[2];
+vars[0] = 0;
+vars[1] = 20;
+
+AsyncResponseStreamChunked *res = req->beginResponseStreamChunked("text/plain", [vars](AsyncResponseStreamChunked* res, size_t maxLen) {
+	size_t ret = 0;
+	uint16_t count = vars[1];
+
+	while (ret < maxLen - 32) {
+		ret += res->printf("some data...%u\n", ESP.getFreeHeap());
+	}
+
+	if(vars[0] < count){
+		const log_t* data = logs.Get(vars[0]);
+		ret += res->printf("i = %u, heap = %u\n", vars[0], ESP.getFreeHeap());
+		vars[0] += 1;
+	} else {
+		delete vars; // free up counter
+		res->end();
+	}
 });
 res->addHeader("Server","ESP Async Web Server");
+request->send(res);
+```
+
+```cpp
+uint16_t* vars = new uint16_t[2];
+vars[0] = 0;
+vars[1] = GetLogCount();
+
+AsyncResponseStreamChunked *res = req->beginResponseStreamChunked("text/plain", [vars](AsyncResponseStreamChunked* res, size_t maxLen) {
+	size_t ret = 0;
+	uint16_t count = vars[1];
+
+	while (ret < maxLen - 16) { // fill data untill need reallocate memory
+		if(vars[0] < count){
+			ret += res->printf("%u,%d\n", vars[0], GetLog(vars[0]));
+			vars[0] += 1;
+		} else {
+			delete vars; // free up counter
+			res->end();
+			break; // remember to exit when no more data.
+		}
+	}
+});
+res->printf("Put something first :)\n");
 request->send(res);
 ```
 
