@@ -87,26 +87,6 @@ class AsyncStreamResponse: public AsyncAbstractResponse {
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
 };
 
-class AsyncCallbackResponse: public AsyncAbstractResponse {
-  private:
-    AwsResponseCallBack _content;
-    size_t _filledLength;
-  public:
-    AsyncCallbackResponse(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
-    bool _sourceValid() const { return !!(_content); }
-    virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
-};
-
-class AsyncChunkedResponse: public AsyncAbstractResponse {
-  private:
-    AwsResponseCallBack _content;
-    size_t _filledLength;
-  public:
-    AsyncChunkedResponse(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
-    bool _sourceValid() const { return !!(_content); }
-    virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
-};
-
 class AsyncProgmemResponse: public AsyncAbstractResponse {
   private:
     const uint8_t * _content;
@@ -121,27 +101,16 @@ class cbuf;
 
 class AsyncResponseStream: public AsyncAbstractResponse, public Print {
   private:
-    cbuf *_content;
-  public:
-    AsyncResponseStream(const String& contentType, size_t bufferSize);
-    ~AsyncResponseStream();
-    bool _sourceValid() const { return (_state < RESPONSE_END); }
-    virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
-    size_t write(const uint8_t *data, size_t len);
-    size_t write(uint8_t data);
-    using Print::write;
-};
-
-class AsyncResponseStreamChunked: public AsyncAbstractResponse, public Print {
-  private:
     AwsResponseStreamChunkedCallBack _content;
     cbuf *_buf;
     size_t _filledLength;
   public:
-    //AsyncResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize);
-    AsyncResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, AwsTemplateProcessor processorCallback=nullptr);
-    ~AsyncResponseStreamChunked();
-    bool _sourceValid() const { return !!(_content); }
+    AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, bool chunk);
+    AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize);
+    AsyncResponseStream(const String& contentType, size_t bufferSize, bool chunk);
+    AsyncResponseStream(const String& contentType, size_t bufferSize);
+    ~AsyncResponseStream();
+    bool _sourceValid() const { return !!(_buf); }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
     size_t write(const uint8_t *data, size_t len);
     size_t write(uint8_t data);

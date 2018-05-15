@@ -54,7 +54,6 @@ class AsyncWebHandler;
 class AsyncStaticWebHandler;
 class AsyncCallbackWebHandler;
 class AsyncResponseStream;
-class AsyncResponseStreamChunked;
 
 typedef enum {
   HTTP_GET     = 0b00000001,
@@ -124,7 +123,7 @@ typedef enum { RCT_NOT_USED = -1, RCT_DEFAULT = 0, RCT_HTTP, RCT_WS, RCT_EVENT, 
 typedef std::function<size_t(uint8_t*, size_t, size_t)> AwsResponseFiller;
 typedef std::function<String(const String&)> AwsTemplateProcessor;
 
-typedef std::function<void(AsyncResponseStreamChunked*, size_t)> AwsResponseStreamChunkedCallBack;
+typedef std::function<void(AsyncResponseStream*, size_t)> AwsResponseStreamChunkedCallBack;
 
 typedef std::function<size_t(AsyncWebServerResponse*, uint8_t*, size_t, size_t)> AwsResponseCallBack;
 
@@ -232,8 +231,6 @@ class AsyncWebServerRequest {
     void send(FS &fs, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
     void send(File content, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
     void send(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback=nullptr);
-    void send(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
-    void sendChunked(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
     void send_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback=nullptr);
     void send_P(int code, const String& contentType, PGM_P content, AwsTemplateProcessor callback=nullptr);
 
@@ -241,10 +238,10 @@ class AsyncWebServerRequest {
     AsyncWebServerResponse *beginResponse(FS &fs, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
     AsyncWebServerResponse *beginResponse(File content, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
     AsyncWebServerResponse *beginResponse(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback=nullptr);
-    AsyncWebServerResponse *beginResponse(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
-    AsyncWebServerResponse *beginChunkedResponse(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback=nullptr);
+
     AsyncResponseStream *beginResponseStream(const String& contentType, size_t bufferSize=1460);
-    AsyncResponseStreamChunked *beginResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize=1460);
+    AsyncResponseStream *beginResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize=1460);
+
     AsyncWebServerResponse *beginResponse_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback=nullptr);
     AsyncWebServerResponse *beginResponse_P(int code, const String& contentType, PGM_P content, AwsTemplateProcessor callback=nullptr);
 

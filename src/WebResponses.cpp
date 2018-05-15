@@ -337,7 +337,7 @@ size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, u
 
     free(buf);
 
-    if((_chunked && readLen == 0 && _end) || (!_chunked && !_sendContentLength && outLen == 0) || (!_chunked && _sentLength == _contentLength)){
+    if((_chunked && readLen == 0 && _end) || (!_chunked && _sentLength == _contentLength)){
       _state = RESPONSE_WAIT_ACK;
     }
     return outLen;
@@ -580,45 +580,6 @@ size_t AsyncStreamResponse::_fillBuffer(uint8_t *data, size_t len){
   return outLen;
 }
 
-/*
- * Callback Response
- * */
-
-AsyncCallbackResponse::AsyncCallbackResponse(const String& contentType, size_t len, AwsResponseCallBack callback, AwsTemplateProcessor templateCallback): AsyncAbstractResponse(templateCallback) {
-  _code = 200;
-  _content = callback;
-  _contentLength = len;
-  if(!len)
-    _sendContentLength = false;
-  _contentType = contentType;
-  _filledLength = 0;
-}
-
-size_t AsyncCallbackResponse::_fillBuffer(uint8_t *data, size_t len){
-  size_t ret = _content(this, data, len, _filledLength);
-  _filledLength += ret;
-  return ret;
-}
-
-/*
- * Chunked Response
- * */
-
-AsyncChunkedResponse::AsyncChunkedResponse(const String& contentType, AwsResponseCallBack callback, AwsTemplateProcessor processorCallback): AsyncAbstractResponse(processorCallback) {
-  _code = 200;
-  _content = callback;
-  _contentLength = 0;
-  _contentType = contentType;
-  _sendContentLength = false;
-  _chunked = true;
-  _filledLength = 0;
-}
-
-size_t AsyncChunkedResponse::_fillBuffer(uint8_t *data, size_t len){
-  size_t ret = _content(this, data, len, _filledLength);
-  _filledLength += ret;
-  return ret;
-}
 
 /*
  * Progmem Response
@@ -646,65 +607,40 @@ size_t AsyncProgmemResponse::_fillBuffer(uint8_t *data, size_t len){
 
 
 /*
- * Response Stream (You can print/write/printf to it, up to the contentLen bytes)
+ * Response Stream (Chunked ver.) (You can print/write/printf to it, untill you call `res->end()`)
  * */
 
-AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize){
-  _code = 200;
-  _contentLength = 0;
-  _contentType = contentType;
-  _content = new cbuf(bufferSize);
-}
-
-AsyncResponseStream::~AsyncResponseStream(){
-  delete _content;
-}
-
-size_t AsyncResponseStream::_fillBuffer(uint8_t *buf, size_t maxLen){
-  return _content->read((char*)buf, maxLen);
-}
-
-size_t AsyncResponseStream::write(const uint8_t *data, size_t len){
-  if(_started())
-    return 0;
-
-  if(len > _content->room()){
-    size_t needed = len - _content->room();
-    _content->resizeAdd(needed);
-  }
-  size_t written = _content->write((const char*)data, len);
-  _contentLength += written;
-  return written;
-}
-
-size_t AsyncResponseStream::write(uint8_t data){
-  return write(&data, 1);
-}
-
-
-/*
- * Response Stream Chunked (You can print/write/printf to it, untill you call `res->end()`)
- * */
-
-AsyncResponseStreamChunked::AsyncResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, AwsTemplateProcessor processorCallback): AsyncAbstractResponse(processorCallback) {
+AsyncResponseStream::AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, bool chunk) {
   _code = 200;
   _content = callback;
   _contentLength = 0;
   _contentType = contentType;
   _sendContentLength = false;
-  _chunked = true;
+  _chunked = chunk;
   _filledLength = 0;
 
   _callback = nullptr;
   _buf = new cbuf(bufferSize);
 }
 
-AsyncResponseStreamChunked::~AsyncResponseStreamChunked(){
+AsyncResponseStream::AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize) {
+  AsyncResponseStream(contentType, callback, bufferSize, true);
+}
+
+AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize, bool chunk) {
+  AsyncResponseStream(contentType, nullptr, bufferSize, chunk);
+}
+
+AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize) {
+  AsyncResponseStream(contentType, nullptr, bufferSize, false);
+}
+
+AsyncResponseStream::~AsyncResponseStream(){
   delete _buf;
 }
 
-size_t AsyncResponseStreamChunked::_fillBuffer(uint8_t *buf, size_t maxLen){
-  if(!_end){
+size_t AsyncResponseStream::_fillBuffer(uint8_t *buf, size_t maxLen){
+  if(!_end && _content != nullptr){
     _content(this, _buf->room());
   }
 
@@ -713,7 +649,7 @@ size_t AsyncResponseStreamChunked::_fillBuffer(uint8_t *buf, size_t maxLen){
   return ret;
 }
 
-size_t AsyncResponseStreamChunked::write(const uint8_t *data, size_t len){
+size_t AsyncResponseStream::write(const uint8_t *data, size_t len){
   if(_end){
     return 0;
   }
@@ -726,7 +662,7 @@ size_t AsyncResponseStreamChunked::write(const uint8_t *data, size_t len){
   return written;
 }
 
-size_t AsyncResponseStreamChunked::write(uint8_t data){
+size_t AsyncResponseStream::write(uint8_t data){
   return write(&data, 1);
 }
 
