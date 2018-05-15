@@ -230,20 +230,20 @@ class AsyncWebServerRequest {
     void send(int code, const String& contentType=String(), const String& content=String());
     void send(FS &fs, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
     void send(File content, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
-    void send(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback=nullptr);
-    void send_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback=nullptr);
-    void send_P(int code, const String& contentType, PGM_P content, AwsTemplateProcessor callback=nullptr);
+    void send(Stream &stream, const String& contentType, size_t len);
+    void send_P(int code, const String& contentType, const uint8_t * content, size_t len);
+    void send_P(int code, const String& contentType, PGM_P content);
 
     AsyncWebServerResponse *beginResponse(int code, const String& contentType=String(), const String& content=String());
     AsyncWebServerResponse *beginResponse(FS &fs, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
     AsyncWebServerResponse *beginResponse(File content, const String& path, const String& contentType=String(), bool download=false, AwsTemplateProcessor callback=nullptr);
-    AsyncWebServerResponse *beginResponse(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback=nullptr);
+    AsyncWebServerResponse *beginResponse(Stream &stream, const String& contentType, size_t len);
 
-    AsyncResponseStream *beginResponseStream(const String& contentType, size_t bufferSize=1460);
-    AsyncResponseStream *beginResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize=1460);
+    AsyncResponseStream *beginResponseStream(const String& contentType, size_t bufferSize);
+    AsyncResponseStream *beginResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize);
 
-    AsyncWebServerResponse *beginResponse_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback=nullptr);
-    AsyncWebServerResponse *beginResponse_P(int code, const String& contentType, PGM_P content, AwsTemplateProcessor callback=nullptr);
+    AsyncWebServerResponse *beginResponse_P(int code, const String& contentType, const uint8_t * content, size_t len);
+    AsyncWebServerResponse *beginResponse_P(int code, const String& contentType, PGM_P content);
 
     size_t headers() const;                     // get header count
     bool hasHeader(const String& name) const;   // check if header exists

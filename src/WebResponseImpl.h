@@ -51,14 +51,12 @@ class AsyncAbstractResponse: public AsyncWebServerResponse {
     size_t _fillBufferAndProcessTemplates(uint8_t* buf, size_t maxLen);
   protected:
     AwsTemplateProcessor _callback;
-//    bool _end;
   public:
     AsyncAbstractResponse(AwsTemplateProcessor callback=nullptr);
     void _respond(AsyncWebServerRequest *request);
     size_t _ack(AsyncWebServerRequest *request, size_t len, uint32_t time);
     bool _sourceValid() const { return false; }
     virtual size_t _fillBuffer(uint8_t *buf __attribute__((unused)), size_t maxLen __attribute__((unused))) { return 0; }
-//    void end() { _end = true; }
 };
 
 #define TEMPLATE_PLACEHOLDER '%'
@@ -82,7 +80,7 @@ class AsyncStreamResponse: public AsyncAbstractResponse {
   private:
     Stream *_content;
   public:
-    AsyncStreamResponse(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback=nullptr);
+    AsyncStreamResponse(Stream &stream, const String& contentType, size_t len);
     bool _sourceValid() const { return !!(_content); }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
 };
@@ -92,7 +90,7 @@ class AsyncProgmemResponse: public AsyncAbstractResponse {
     const uint8_t * _content;
     size_t _readLength;
   public:
-    AsyncProgmemResponse(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback=nullptr);
+    AsyncProgmemResponse(int code, const String& contentType, const uint8_t * content, size_t len);
     bool _sourceValid() const { return true; }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;
 };
@@ -105,10 +103,8 @@ class AsyncResponseStream: public AsyncAbstractResponse, public Print {
     cbuf *_buf;
     size_t _filledLength;
   public:
-    AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, bool chunk);
-    AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize);
-    AsyncResponseStream(const String& contentType, size_t bufferSize, bool chunk);
-    AsyncResponseStream(const String& contentType, size_t bufferSize);
+    AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize = 1460, bool chunk = true);
+    AsyncResponseStream(const String& contentType, size_t bufferSize = 1460, bool chunk = false);
     ~AsyncResponseStream();
     bool _sourceValid() const { return !!(_buf); }
     virtual size_t _fillBuffer(uint8_t *buf, size_t maxLen) override;

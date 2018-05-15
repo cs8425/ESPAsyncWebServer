@@ -244,8 +244,7 @@ size_t AsyncBasicResponse::_ack(AsyncWebServerRequest *request, size_t len, uint
  * Abstract Response
  * */
 
-AsyncAbstractResponse::AsyncAbstractResponse(AwsTemplateProcessor callback): _callback(callback)
-{
+AsyncAbstractResponse::AsyncAbstractResponse(AwsTemplateProcessor callback): _callback(callback) {
   // In case of template processing, we're unable to determine real response size
   if(callback) {
     _contentLength = 0;
@@ -491,7 +490,7 @@ void AsyncFileResponse::_setContentType(const String& path){
   else _contentType = "text/plain";
 }
 
-AsyncFileResponse::AsyncFileResponse(FS &fs, const String& path, const String& contentType, bool download, AwsTemplateProcessor callback): AsyncAbstractResponse(callback){
+AsyncFileResponse::AsyncFileResponse(FS &fs, const String& path, const String& contentType, bool download, AwsTemplateProcessor callback): AsyncAbstractResponse(callback) {
   _code = 200;
   _path = path;
 
@@ -525,7 +524,7 @@ AsyncFileResponse::AsyncFileResponse(FS &fs, const String& path, const String& c
   addHeader("Content-Disposition", buf);
 }
 
-AsyncFileResponse::AsyncFileResponse(File content, const String& path, const String& contentType, bool download, AwsTemplateProcessor callback): AsyncAbstractResponse(callback){
+AsyncFileResponse::AsyncFileResponse(File content, const String& path, const String& contentType, bool download, AwsTemplateProcessor callback): AsyncAbstractResponse(callback) {
   _code = 200;
   _path = path;
 
@@ -564,7 +563,7 @@ size_t AsyncFileResponse::_fillBuffer(uint8_t *data, size_t len){
  * Stream Response
  * */
 
-AsyncStreamResponse::AsyncStreamResponse(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback): AsyncAbstractResponse(callback) {
+AsyncStreamResponse::AsyncStreamResponse(Stream &stream, const String& contentType, size_t len) {
   _code = 200;
   _content = &stream;
   _contentLength = len;
@@ -585,7 +584,7 @@ size_t AsyncStreamResponse::_fillBuffer(uint8_t *data, size_t len){
  * Progmem Response
  * */
 
-AsyncProgmemResponse::AsyncProgmemResponse(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback): AsyncAbstractResponse(callback) {
+AsyncProgmemResponse::AsyncProgmemResponse(int code, const String& contentType, const uint8_t * content, size_t len) {
   _code = code;
   _content = content;
   _contentType = contentType;
@@ -607,7 +606,7 @@ size_t AsyncProgmemResponse::_fillBuffer(uint8_t *data, size_t len){
 
 
 /*
- * Response Stream (Chunked ver.) (You can print/write/printf to it, untill you call `res->end()`)
+ * Response Stream (Chunked ver.) (You can print/write/printf to it, remember call `res->end()`)
  * */
 
 AsyncResponseStream::AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize, bool chunk) {
@@ -623,16 +622,8 @@ AsyncResponseStream::AsyncResponseStream(const String& contentType, AwsResponseS
   _buf = new cbuf(bufferSize);
 }
 
-AsyncResponseStream::AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize) {
-  AsyncResponseStream(contentType, callback, bufferSize, true);
-}
-
 AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize, bool chunk) {
   AsyncResponseStream(contentType, nullptr, bufferSize, chunk);
-}
-
-AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize) {
-  AsyncResponseStream(contentType, nullptr, bufferSize, false);
 }
 
 AsyncResponseStream::~AsyncResponseStream(){

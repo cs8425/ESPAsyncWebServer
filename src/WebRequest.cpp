@@ -739,24 +739,24 @@ AsyncWebServerResponse * AsyncWebServerRequest::beginResponse(File content, cons
   return NULL;
 }
 
-AsyncWebServerResponse * AsyncWebServerRequest::beginResponse(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback){
-  return new AsyncStreamResponse(stream, contentType, len, callback);
+AsyncWebServerResponse * AsyncWebServerRequest::beginResponse(Stream &stream, const String& contentType, size_t len){
+  return new AsyncStreamResponse(stream, contentType, len);
 }
 
 AsyncResponseStream * AsyncWebServerRequest::beginResponseStream(const String& contentType, size_t bufferSize){
-  return new AsyncResponseStream(contentType, bufferSize, false);
+  return new AsyncResponseStream(contentType, bufferSize);
 }
 
 AsyncResponseStream * AsyncWebServerRequest::beginResponseStreamChunked(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize){
   return new AsyncResponseStream(contentType, callback, bufferSize);
 }
 
-AsyncWebServerResponse * AsyncWebServerRequest::beginResponse_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback){
-  return new AsyncProgmemResponse(code, contentType, content, len, callback);
+AsyncWebServerResponse * AsyncWebServerRequest::beginResponse_P(int code, const String& contentType, const uint8_t * content, size_t len){
+  return new AsyncProgmemResponse(code, contentType, content, len);
 }
 
-AsyncWebServerResponse * AsyncWebServerRequest::beginResponse_P(int code, const String& contentType, PGM_P content, AwsTemplateProcessor callback){
-  return beginResponse_P(code, contentType, (const uint8_t *)content, strlen_P(content), callback);
+AsyncWebServerResponse * AsyncWebServerRequest::beginResponse_P(int code, const String& contentType, PGM_P content){
+  return beginResponse_P(code, contentType, (const uint8_t *)content, strlen_P(content));
 }
 
 void AsyncWebServerRequest::send(int code, const String& contentType, const String& content){
@@ -775,16 +775,16 @@ void AsyncWebServerRequest::send(File content, const String& path, const String&
   } else send(404);
 }
 
-void AsyncWebServerRequest::send(Stream &stream, const String& contentType, size_t len, AwsTemplateProcessor callback){
-  send(beginResponse(stream, contentType, len, callback));
+void AsyncWebServerRequest::send(Stream &stream, const String& contentType, size_t len){
+  send(beginResponse(stream, contentType, len));
 }
 
-void AsyncWebServerRequest::send_P(int code, const String& contentType, const uint8_t * content, size_t len, AwsTemplateProcessor callback){
-  send(beginResponse_P(code, contentType, content, len, callback));
+void AsyncWebServerRequest::send_P(int code, const String& contentType, const uint8_t * content, size_t len){
+  send(beginResponse_P(code, contentType, content, len));
 }
 
-void AsyncWebServerRequest::send_P(int code, const String& contentType, PGM_P content, AwsTemplateProcessor callback){
-  send(beginResponse_P(code, contentType, content, callback));
+void AsyncWebServerRequest::send_P(int code, const String& contentType, PGM_P content){
+  send(beginResponse_P(code, contentType, content));
 }
 
 void AsyncWebServerRequest::redirect(const String& url){
