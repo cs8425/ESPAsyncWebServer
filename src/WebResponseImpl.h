@@ -101,7 +101,6 @@ class AsyncResponseStream: public AsyncAbstractResponse, public Print {
   private:
     AwsResponseStreamChunkedCallBack _content;
     cbuf *_buf;
-    size_t _filledLength;
   public:
     AsyncResponseStream(const String& contentType, AwsResponseStreamChunkedCallBack callback, size_t bufferSize = 1460, bool chunk = true);
     AsyncResponseStream(const String& contentType, size_t bufferSize = 1460, bool chunk = false);

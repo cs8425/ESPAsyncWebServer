@@ -94,6 +94,7 @@ AsyncWebServerResponse::AsyncWebServerResponse()
   , _ackedLength(0)
   , _writtenLength(0)
   , _state(RESPONSE_SETUP)
+  , _end(false)
 {
   for(auto header: DefaultHeaders::Instance()) {
     _headers.add(new AsyncWebHeader(header->name(), header->value()));
@@ -314,7 +315,7 @@ size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, u
     if(_chunked){
       // HTTP 1.1 allows leading zeros in chunk length. Or spaces may be added.
       // See RFC2616 sections 2, 3.6.1.
-      readLen = _fillBufferAndProcessTemplates(buf+headLen+6, outLen - 8);
+      readLen = _fillBuffer(buf+headLen+6, outLen - 8);
       outLen = sprintf((char*)buf+headLen, "%x", readLen) + headLen;
       while(outLen < headLen + 4) buf[outLen++] = ' ';
       buf[outLen++] = '\r';
@@ -323,7 +324,7 @@ size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, u
       buf[outLen++] = '\r';
       buf[outLen++] = '\n';
     } else {
-      outLen = _fillBufferAndProcessTemplates(buf+headLen, outLen) + headLen;
+      outLen = _fillBuffer(buf+headLen, outLen) + headLen;
     }
 
     if(outLen)
@@ -336,15 +337,19 @@ size_t AsyncAbstractResponse::_ack(AsyncWebServerRequest *request, size_t len, u
 
     free(buf);
 
-    if((_chunked && readLen == 0 && _end) || (!_chunked && _sentLength == _contentLength)){
+    if(_chunked && readLen == 0 && _end){
       _state = RESPONSE_WAIT_ACK;
     }
+    if(!_chunked && ((_sentLength == _contentLength) || (!_sendContentLength && outLen == 0 && _end))){
+      _state = RESPONSE_WAIT_ACK;
+    }
+
     return outLen;
 
   } else if(_state == RESPONSE_WAIT_ACK){
     if(!_sendContentLength || _ackedLength >= _writtenLength){
       _state = RESPONSE_END;
-      if(!_chunked && !_sendContentLength && _end)
+      if(!_chunked && !_sendContentLength)
         request->client()->close(true);
     }
   }
@@ -614,16 +619,15 @@ AsyncResponseStream::AsyncResponseStream(const String& contentType, AwsResponseS
   _content = callback;
   _contentLength = 0;
   _contentType = contentType;
-  _sendContentLength = false;
+  _sendContentLength = !chunk;
   _chunked = chunk;
-  _filledLength = 0;
 
   _callback = nullptr;
   _buf = new cbuf(bufferSize);
 }
 
-AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize, bool chunk) {
-  AsyncResponseStream(contentType, nullptr, bufferSize, chunk);
+AsyncResponseStream::AsyncResponseStream(const String& contentType, size_t bufferSize, bool chunk): AsyncResponseStream(contentType, nullptr, bufferSize, chunk) {
+
 }
 
 AsyncResponseStream::~AsyncResponseStream(){
