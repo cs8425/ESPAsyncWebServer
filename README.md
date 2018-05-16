@@ -1,6 +1,7 @@
 # ESPAsyncWebServer [![Build Status](https://travis-ci.org/me-no-dev/ESPAsyncWebServer.svg?branch=master)](https://travis-ci.org/me-no-dev/ESPAsyncWebServer)
 
 This port add "chunked response with print support". Can handle bigger output with print/write/printf (tested with ~60kB).
+And remove some less used features.
 
 For help and support [![Join the chat at https://gitter.im/me-no-dev/ESPAsyncWebServer](https://badges.gitter.im/me-no-dev/ESPAsyncWebServer.svg)](https://gitter.im/me-no-dev/ESPAsyncWebServer?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -40,22 +41,13 @@ To use this library you might need to have the latest git versions of [ESP32](ht
 		- [Basic response with string content and extra headers](#basic-response-with-string-content-and-extra-headers)
 		- [Send large webpage from PROGMEM](#send-large-webpage-from-progmem)
 		- [Send large webpage from PROGMEM and extra headers](#send-large-webpage-from-progmem-and-extra-headers)
-		- [Send large webpage from PROGMEM containing templates](#send-large-webpage-from-progmem-containing-templates)
-		- [Send large webpage from PROGMEM containing templates and extra headers](#send-large-webpage-from-progmem-containing-templates-and-extra-headers)
 		- [Send binary content from PROGMEM](#send-binary-content-from-progmem)
 		- [Respond with content coming from a Stream](#respond-with-content-coming-from-a-stream)
 		- [Respond with content coming from a Stream and extra headers](#respond-with-content-coming-from-a-stream-and-extra-headers)
-		- [Respond with content coming from a Stream containing templates](#respond-with-content-coming-from-a-stream-containing-templates)
-		- [Respond with content coming from a Stream containing templates and extra headers](#respond-with-content-coming-from-a-stream-containing-templates-and-extra-headers)
 		- [Respond with content coming from a File](#respond-with-content-coming-from-a-file)
 		- [Respond with content coming from a File and extra headers](#respond-with-content-coming-from-a-file-and-extra-headers)
 		- [Respond with content coming from a File containing templates](#respond-with-content-coming-from-a-file-containing-templates)
-		- [Respond with content using a callback](#respond-with-content-using-a-callback)
-		- [Respond with content using a callback and extra headers](#respond-with-content-using-a-callback-and-extra-headers)
-		- [Respond with content using a callback containing templates](#respond-with-content-using-a-callback-containing-templates)
-		- [Respond with content using a callback containing templates and extra headers](#respond-with-content-using-a-callback-containing-templates-and-extra-headers)
-		- [Chunked Response](#chunked-response)
-		- [Print to chunked response](#print-to-chunked-response)
+		- [Chunked Response with Print](#chunked-response-with-print)
 		- [Print to response](#print-to-response)
 		- [ArduinoJson Basic Response](#arduinojson-basic-response)
 		- [ArduinoJson Advanced Response](#arduinojson-advanced-response)
@@ -365,38 +357,6 @@ response->addHeader("Server","ESP Async Web Server");
 request->send(response);
 ```
 
-### Send large webpage from PROGMEM containing templates
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-const char index_html[] PROGMEM = "..."; // large char array, tested with 14k
-request->send_P(200, "text/html", index_html, processor);
-```
-
-### Send large webpage from PROGMEM containing templates and extra headers
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-const char index_html[] PROGMEM = "..."; // large char array, tested with 14k
-AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", index_html, processor);
-response->addHeader("Server","ESP Async Web Server");
-request->send(response);
-```
-
 ### Send binary content from PROGMEM
 ```cpp
 
@@ -470,38 +430,6 @@ response->addHeader("Server","ESP Async Web Server");
 request->send(response);
 ```
 
-### Respond with content coming from a Stream containing templates
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-//read 12 bytes from Serial and send them as Content Type text/plain
-request->send(Serial, "text/plain", 12, processor);
-```
-
-### Respond with content coming from a Stream containing templates and extra headers
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-//read 12 bytes from Serial and send them as Content Type text/plain
-AsyncWebServerResponse *response = request->beginResponse(Serial, "text/plain", 12, processor);
-response->addHeader("Server","ESP Async Web Server");
-request->send(response);
-```
-
 ### Respond with content coming from a File
 ```cpp
 //Send index.htm with default content type
@@ -530,7 +458,6 @@ request->send(response);
 ```
 
 ### Respond with content coming from a File containing templates
-Internally uses [Chunked Response](#chunked-response).
 
 Index.htm contents:
 ```
@@ -552,103 +479,22 @@ String processor(const String& var)
 request->send(SPIFFS, "/index.htm", String(), false, processor);
 ```
 
-### Respond with content using a callback
-```cpp
-//send 128 bytes as plain text
-request->send("text/plain", 128, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-  //Write up to "maxLen" bytes into "buffer" and return the amount written.
-  //index equals the amount of bytes that have been already sent
-  //You will not be asked for more bytes once the content length has been reached.
-  //Keep in mind that you can not delay or yield waiting for more data!
-  //Send what you currently have and you will be asked for more again
-  return mySource.read(buffer, maxLen);
-});
-```
-
-### Respond with content using a callback and extra headers
-```cpp
-//send 128 bytes as plain text
-AsyncWebServerResponse *response = request->beginResponse("text/plain", 128, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-  //Write up to "maxLen" bytes into "buffer" and return the amount written.
-  //index equals the amount of bytes that have been already sent
-  //You will not be asked for more bytes once the content length has been reached.
-  //Keep in mind that you can not delay or yield waiting for more data!
-  //Send what you currently have and you will be asked for more again
-  return mySource.read(buffer, maxLen);
-});
-response->addHeader("Server","ESP Async Web Server");
-request->send(response);
-```
-
-### Respond with content using a callback containing templates
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-//send 128 bytes as plain text
-request->send("text/plain", 128, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-  //Write up to "maxLen" bytes into "buffer" and return the amount written.
-  //index equals the amount of bytes that have been already sent
-  //You will not be asked for more bytes once the content length has been reached.
-  //Keep in mind that you can not delay or yield waiting for more data!
-  //Send what you currently have and you will be asked for more again
-  return mySource.read(buffer, maxLen);
-}, processor);
-```
-
-### Respond with content using a callback containing templates and extra headers
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-//send 128 bytes as plain text
-AsyncWebServerResponse *response = request->beginResponse("text/plain", 128, [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-  //Write up to "maxLen" bytes into "buffer" and return the amount written.
-  //index equals the amount of bytes that have been already sent
-  //You will not be asked for more bytes once the content length has been reached.
-  //Keep in mind that you can not delay or yield waiting for more data!
-  //Send what you currently have and you will be asked for more again
-  return mySource.read(buffer, maxLen);
-}, processor);
-response->addHeader("Server","ESP Async Web Server");
-request->send(response);
-```
-
-### Chunked Response
-Used when content length is unknown. Works best if the client supports HTTP/1.1
-```cpp
-AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-  //Write up to "maxLen" bytes into "buffer" and return the amount written.
-  //index equals the amount of bytes that have been already sent
-  //You will be asked for more data until 0 is returned
-  //Keep in mind that you can not delay or yield waiting for more data!
-  return mySource.read(buffer, maxLen);
-});
-response->addHeader("Server","ESP Async Web Server");
-request->send(response);
-```
-
-
-### Print to chunked response
+### Chunked Response with Print
 Used when content length is unknown. Output data until calling `res->end()`.
 ```cpp
-uint16_t* vars = new uint16_t[2];
+uint16_t* vars = new(std::nothrow) uint16_t[2];
+if (vars == nullptr) {
+	req->send(500);
+	return;
+}
 vars[0] = 0;
 vars[1] = 20;
 
-AsyncResponseStreamChunked *res = req->beginResponseStreamChunked("text/plain", [vars](AsyncResponseStreamChunked* res, size_t maxLen) {
+req->onDisconnect([vars](){
+	delete vars; // free up allocated memory
+});
+
+AsyncResponseStream *res = req->beginResponseStreamChunked("text/plain", [vars](AsyncResponseStream* res, size_t maxLen) {
 	size_t ret = 0;
 	uint16_t count = vars[1];
 
@@ -661,7 +507,6 @@ AsyncResponseStreamChunked *res = req->beginResponseStreamChunked("text/plain", 
 		ret += res->printf("i = %u, heap = %u\n", vars[0], ESP.getFreeHeap());
 		vars[0] += 1;
 	} else {
-		delete vars; // free up counter
 		res->end();
 	}
 });
@@ -670,11 +515,19 @@ request->send(res);
 ```
 
 ```cpp
-uint16_t* vars = new uint16_t[2];
+uint16_t* vars = new(std::nothrow) uint16_t[2];
+if (vars == nullptr) {
+	req->send(500);
+	return;
+}
 vars[0] = 0;
 vars[1] = GetLogCount();
 
-AsyncResponseStreamChunked *res = req->beginResponseStreamChunked("text/plain", [vars](AsyncResponseStreamChunked* res, size_t maxLen) {
+req->onDisconnect([vars](){
+	delete vars; // free up allocated memory
+});
+
+AsyncResponseStream *res = req->beginResponseStreamChunked("text/plain", [vars](AsyncResponseStream* res, size_t maxLen) {
 	size_t ret = 0;
 	uint16_t count = vars[1];
 
@@ -683,40 +536,18 @@ AsyncResponseStreamChunked *res = req->beginResponseStreamChunked("text/plain", 
 			ret += res->printf("%u,%d\n", vars[0], GetLog(vars[0]));
 			vars[0] += 1;
 		} else {
-			delete vars; // free up counter
 			res->end();
 			break; // remember to exit when no more data.
 		}
 	}
 });
 res->printf("Put something first :)\n");
-request->send(res);
-```
-
-### Chunked Response containing templates
-Used when content length is unknown. Works best if the client supports HTTP/1.1
-```cpp
-String processor(const String& var)
-{
-  if(var == "HELLO_FROM_TEMPLATE")
-    return F("Hello world!");
-  return String();
-}
-
-// ...
-
-AsyncWebServerResponse *response = request->beginChunkedResponse("text/plain", [](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
-  //Write up to "maxLen" bytes into "buffer" and return the amount written.
-  //index equals the amount of bytes that have been already sent
-  //You will be asked for more data until 0 is returned
-  //Keep in mind that you can not delay or yield waiting for more data!
-  return mySource.read(buffer, maxLen);
-}, processor);
-response->addHeader("Server","ESP Async Web Server");
-request->send(response);
+req->send(res);
 ```
 
 ### Print to response
+remember call `res->end()`!
+
 ```cpp
 AsyncResponseStream *response = request->beginResponseStream("text/html");
 response->addHeader("Server","ESP Async Web Server");
@@ -762,7 +593,9 @@ for(int i=0;i<params;i++){
 response->print("</ul>");
 
 response->print("</body></html>");
-//send the response last
+
+//mark end and send the response last
+response->end();
 request->send(response);
 ```
 
@@ -859,6 +692,10 @@ with "If-Modified-Since" header with the same value, instead of responding with 
 ```cpp
 // Update the date modified string every time files are updated
 server.serveStatic("/", SPIFFS, "/www/").setLastModified("Mon, 20 Jun 2016 14:00:00 GMT");
+
+// or with build time
+const char * buildTime = __DATE__ " " __TIME__ " GMT";
+server.serveStatic("/", SPIFFS, "/www/").setLastModified(buildTime);
 
 //*** Chage last modified value at a later stage ***
 
